@@ -1,28 +1,25 @@
 import sqlite3
-import sys
 
-from PyQt5 import uic
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
-from PyQt5.QtWidgets import QHBoxLayout, QApplication, \
-    QMainWindow
+from PyQt5.QtWidgets import QHBoxLayout, QMainWindow
 
-from addEditCoffeeForm import Dialogs
+from UI.addEditCoffeeForm import Dialogs
+from UI.main_ui import Ui_MainWindow
 
 
-class Window(QMainWindow, Dialogs):
+class Window(QMainWindow, Dialogs, Ui_MainWindow):
     def __init__(
         self
     ):
         super().__init__()
-        uic.loadUi('main.ui', self)
+        self.setupUi(self)
         self.display_db()
 
     def display_db(self):
         self.button_1.clicked.connect(self.add_base)
         self.button_2.clicked.connect(self.update_base)
-
         self.db = QSqlDatabase.addDatabase('QSQLITE')
-        self.db.setDatabaseName('coffee.sqlite')
+        self.db.setDatabaseName('../data/coffee.sqlite')
         self.db.open()
 
         self.model = QSqlTableModel(self, self.db)
@@ -40,7 +37,7 @@ class Window(QMainWindow, Dialogs):
         if not data:
             return
         id, name, roasting, type, description, price, volume = data
-        con = sqlite3.connect('coffee.sqlite')
+        con = sqlite3.connect('../data/coffee.sqlite')
         cur = con.cursor()
         insert_into = f'INSERT INTO ' \
                       f'coffee(id, name, roasting, type, description, ' \
@@ -77,7 +74,7 @@ class Window(QMainWindow, Dialogs):
                                           description, price, volume)
             id, name, roasting, type, description, price, volume = data
 
-            con = sqlite3.connect('coffee.sqlite')
+            con = sqlite3.connect('../data/coffee.sqlite')
             cur = con.cursor()
 
             update_1 = f'UPDATE coffee SET id = {id} WHERE id = {id}'
@@ -89,7 +86,9 @@ class Window(QMainWindow, Dialogs):
             cur.execute(update_2)
             con.commit()
 
-            update_3 = f'UPDATE coffee SET roasting = "{roasting}" WHERE id = {id}'
+            update_3 = f'UPDATE coffee ' \
+                       f'SET roasting = "{roasting}" ' \
+                       f'WHERE id = {id}'
             cur.execute(update_3)
             con.commit()
 
@@ -116,19 +115,3 @@ class Window(QMainWindow, Dialogs):
             con.commit()
             con.close()
             self.display_db()
-
-
-def except_hook(cls, exception, traceback):
-    sys.__excepthook__(cls, exception, traceback)
-
-
-def main():
-    sys.excepthook = except_hook
-    app = QApplication(sys.argv)
-    wnd = Window()
-    wnd.show()
-    sys.exit(app.exec())
-
-
-if __name__ == '__main__':
-    main()
